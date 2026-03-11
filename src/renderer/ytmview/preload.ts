@@ -17,6 +17,7 @@ import hookPlayerApiEventsScript from "./scripts/hookplayerapievents.script?raw"
 import getPlaylistsScript from "./scripts/getplaylists.script?raw";
 import toggleLikeScript from "./scripts/togglelike.script?raw";
 import toggleDislikeScript from "./scripts/toggledislike.script?raw";
+import loadSidebarPlaylistsScript from "./scripts/loadsidebarplaylists.script?raw";
 
 const store = new Store<StoreSchema>();
 
@@ -277,6 +278,14 @@ window.addEventListener("load", async () => {
   await hideChromecastButton();
   await hookPlayerApiEvents();
   overrideHistoryButtonDisplay();
+
+  // Load all playlists into sidebar (bypasses YouTube Music's 50-playlist cap)
+  try {
+    const sidebarResult = await (await webFrame.executeJavaScript(loadSidebarPlaylistsScript))();
+    console.log(`[YTMD] Sidebar playlists loaded: injected ${sidebarResult.injected}, total ${sidebarResult.total} (was ${sidebarResult.was})`);
+  } catch (e) {
+    console.warn("[YTMD] Failed to load sidebar playlists:", e);
+  }
 
   const integrationScripts: { [integrationName: string]: { [scriptName: string]: string } } = await ipcRenderer.invoke("ytmView:getIntegrationScripts");
 
